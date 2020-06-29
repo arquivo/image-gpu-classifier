@@ -1,0 +1,6 @@
+version: '0.1'
+services:
+  nsfw:
+    image: redis
+volumes:
+  logvolume01: {}
