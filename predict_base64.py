@@ -17,7 +17,7 @@ import base64
 import sys
 
 IMAGE_DIM = 224   # required/default image dimensionality
-BATCH_SIZE = 128
+BATCH_SIZE = 96
 
 def load_images(model, image_path, image_size, verbose=True):
     '''
@@ -37,55 +37,55 @@ def load_images(model, image_path, image_size, verbose=True):
     j = 0
 
     stored_lines = OrderedDict()
+    with open(image_path+"_out.json", "w") as out:
+	    with open(image_path) as f:
+	        for row in f:
+	            line = json.loads(row)
+	            if line["type"] == 'image':
+	                image_id = line["id"]
+	            else:
+	                image_id = line["imgId"]
+	            
+	            if line["type"] == 'image':
+	                if j != 0 and j % BATCH_SIZE == 0:
+	                    loaded_images = np.asarray(loaded_images)
+	                    probs = classify_nd(model, loaded_images, loaded_ids)
+	                    for image_id_int in stored_lines:
+	                        stored_line_id = stored_lines[image_id_int]
+	                        for stored_line in stored_line_id:
+	                            if image_id_int in probs:
+	                                stored_line.update(probs[image_id_int])
+	                            out.write(json.dumps(stored_line))
+	                    loaded_images = []
+	                    loaded_ids = []
+	                    stored_lines = OrderedDict()
+	                image_data = line["imgSrcBase64"]
+	                img_path = line["imgSrc"]
+	                try:
+	                    image = Image.open(BytesIO(base64.b64decode(image_data)))
+	                    image = image.resize(image_size, resample=Image.BILINEAR).convert('RGB')
+	                    image = keras.preprocessing.image.img_to_array(image)
+	                    image /= 255
+	                    loaded_images.append(image)
+	                    loaded_ids.append(image_id)
+	                except Exception as ex:
+	                    print("Image Load Failure: ", img_path, ex, file=sys.stderr)
+	                j += 1
 
-    with open(image_path) as f:
-        for row in f:
-            line = json.loads(row)
-            if line["type"] == 'image':
-                image_id = line["id"]
-            else:
-                image_id = line["imgId"]
-            
-            if line["type"] == 'image':
-                if j != 0 and j % BATCH_SIZE == 0:
-                    loaded_images = np.asarray(loaded_images)
-                    probs = classify_nd(model, loaded_images, loaded_ids)
-                    for image_id_int in stored_lines:
-                        stored_line_id = stored_lines[image_id_int]
-                        for stored_line in stored_line_id:
-                            if image_id_int in probs:
-                                stored_line.update(probs[image_id_int])
-                            print(json.dumps(stored_line))
-                    loaded_images = []
-                    loaded_ids = []
-                    stored_lines = OrderedDict()
-                image_data = line["imgSrcBase64"]
-                img_path = line["imgSrc"]
-                try:
-                    image = Image.open(BytesIO(base64.b64decode(image_data)))
-                    image = image.resize(image_size, resample=Image.BILINEAR).convert('RGB')
-                    image = keras.preprocessing.image.img_to_array(image)
-                    image /= 255
-                    loaded_images.append(image)
-                    loaded_ids.append(image_id)
-                except Exception as ex:
-                    print("Image Load Failure: ", img_path, ex, file=sys.stderr)
-                j += 1
+	            if not image_id in stored_lines:
+	                stored_lines[image_id] = []
+	            stored_lines[image_id].append(line)
 
-            if not image_id in stored_lines:
-                stored_lines[image_id] = []
-            stored_lines[image_id].append(line)
-
-    if len(loaded_images) > 0:
-        loaded_images = np.asarray(loaded_images)
-        probs = classify_nd(model, loaded_images, loaded_ids)
-        for image_id_int in stored_lines:
-            stored_line_id = stored_lines[image_id_int]
-            for stored_line in stored_line_id:
-                if image_id_int in probs:
-                    stored_line.update(probs[image_id_int])
-                print(json.dumps(stored_line))
-                    
+	    if len(loaded_images) > 0:
+	        loaded_images = np.asarray(loaded_images)
+	        probs = classify_nd(model, loaded_images, loaded_ids)
+	        for image_id_int in stored_lines:
+	            stored_line_id = stored_lines[image_id_int]
+	            for stored_line in stored_line_id:
+	                if image_id_int in probs:
+	                    stored_line.update(probs[image_id_int])
+	                out.write(json.dumps(stored_line))
+	                    
 
 def load_model(model_path):
     if model_path is None or not exists(model_path):
