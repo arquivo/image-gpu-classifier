@@ -6,6 +6,7 @@ from collections import OrderedDict
 
 import argparse
 import json
+import os
 from os import listdir
 from os.path import isfile, join, exists, isdir, abspath
 
@@ -32,6 +33,8 @@ tps = []
 fns = [] 
 tns = []
 
+CATEGORIES = ['drawing', 'hentai', 'neutral', 'porn', 'sexy']
+
 def get_stats(raw_data, cat):
     if not raw_data:
         return 0, 0, 0, 0
@@ -42,7 +45,7 @@ def get_stats(raw_data, cat):
     maxV = np.amax(data)
     return median, mean, minV, maxV
 
-def load_images(model, image_path, image_size, verbose=True):
+def load_images(model, image_paths, image_size, verbose=True):
     '''
     Function for loading images into numpy arrays for passing to model.predict
     inputs:
@@ -55,43 +58,61 @@ def load_images(model, image_path, image_size, verbose=True):
         loaded_image_indexes: paths of images which the function is able to process
     
     '''
-    loaded_images = []
-    safes = []
-    j = 0
-    with open(image_path + "_pred.csv", "w") as out:
-        with open(image_path) as f:
-            for row in f:
-                line = json.loads(row)
-                if j != 0 and j % BATCH_SIZE == 0:
+
+    global tp
+    global tn
+    global fp
+    global fn
+
+    global tps
+    global tns
+    global fps
+    global fns
+        
+    for image_path in image_paths:
+        if os.path.isdir(image_path):
+            with open(image_path + "_pred.csv", "w") as out:
+                j = 0
+                loaded_images = []
+                safes = []
+                fp = 0 
+                tp = 0
+                fn = 0 
+                tn = 0
+
+                fps = []
+                tps = []
+                fns = [] 
+                tns = []
+                for image_loc in os.listdir(image_path):
+                    if j != 0 and j % BATCH_SIZE == 0:
+                        loaded_images = np.asarray(loaded_images)
+                        probs = classify_nd(model, loaded_images, safes)
+                        loaded_images = []
+                        safes = []
+                    try:
+                        image = Image.open(os.path.join(image_path, image_loc))
+                        image = image.resize(image_size, resample=Image.BILINEAR).convert('RGB')
+                        image = keras.preprocessing.image.img_to_array(image)
+                        image /= 255
+                        loaded_images.append(image)
+                        safes.append(int("NSFW" in image_path))
+                    except Exception as ex:
+                        print("Image Load Failure: ", image_loc, ex, file=sys.stderr)
+                    j += 1
+
+                if len(loaded_images) > 0:
                     loaded_images = np.asarray(loaded_images)
                     probs = classify_nd(model, loaded_images, safes)
-                    loaded_images = []
-                    safes = []
-                image_data = line["imgSrcBase64"]
-                img_path = line["imgSrc"]
-                try:
-                    image = Image.open(BytesIO(base64.b64decode(image_data)))
-                    image = image.resize(image_size, resample=Image.BILINEAR).convert('RGB')
-                    image = keras.preprocessing.image.img_to_array(image)
-                    image /= 255
-                    loaded_images.append(image)
-                    safes.append(line["safe"])
-                except Exception as ex:
-                    print("Image Load Failure: ", img_path, ex, file=sys.stderr)
-                j += 1
 
-        if len(loaded_images) > 0:
-            loaded_images = np.asarray(loaded_images)
-            probs = classify_nd(model, loaded_images, safes)
+                out.write("\t".join([str(tp),str(tn),str(fp),str(fn)]) + "\n\n")
 
-        out.write("\t".join([str(tp),str(tn),str(fp),str(fn)]) + "\n\n")
-
-        for cat in ['drawing', 'hentai', 'neutral', 'porn', 'sexy']:
-            for metric in [tps, tns, fps, fns]:
-                median, mean, minV, maxV = get_stats(metric, cat)
-                out.write("\t".join([str(median),str(mean),str(minV),str(maxV)]) + "\n")
-            out.write("\n\n")
-        
+                for cat in CATEGORIES:
+                    for metric in [tps, tns, fps, fns]:
+                        median, mean, minV, maxV = get_stats(metric, cat)
+                        out.write("\t".join([str(median),str(mean),str(minV),str(maxV)]) + "\n")
+                    out.write("\n\n")
+            
 
 def load_model(model_path):
     if model_path is None or not exists(model_path):
@@ -103,7 +124,7 @@ def load_model(model_path):
 
 def classify(model, input_paths, image_dim=IMAGE_DIM):
     """ Classify given a model, input paths (could be single string), and image dimensionality...."""
-    load_images(model, input_paths, (image_dim, image_dim))
+    load_images(model, [os.path.join(input_paths, image_path) for image_path in os.listdir(input_paths)], (image_dim, image_dim))
 
     return
     #probs = classify_nd(model, images)
@@ -126,14 +147,12 @@ def classify_nd(model, nd_images, safes):
 
     # preds = np.argsort(model_preds, axis = 1).tolist()
     
-    categories = ['drawing', 'hentai', 'neutral', 'porn', 'sexy']
-
     for i, single_preds in enumerate(model_preds):
         single_probs = {}
         for j, pred in enumerate(single_preds):
-            single_probs[categories[j]] = float(pred)
+            single_probs[CATEGORIES[j]] = float(pred)
         safe = safes[i]
-        nsafe = single_probs['porn'] + single_probs['hentai'] + single_probs['sexy']
+        nsafe = single_probs['porn'] + single_probs['hentai']
         if safe <= THRESHOLD:
             if nsafe <= THRESHOLD:
                 tn += 1
