@@ -21,13 +21,13 @@ RUN git clone https://github.com/arquivo/image-gpu-classifier
 
 RUN git clone https://github.com/theAIGuysCode/tensorflow-yolov4-tflite.git
 
-RUN mv /tensorflow-yolov4-tflite /tfyolo
+RUN mkdir code
 
-RUN cp /image-gpu-classifier/yolo-extra/setup.py .
+RUN mv /tensorflow-yolov4-tflite /code/tfyolo
 
-RUN pip install .
+RUN cp /image-gpu-classifier/yolo-extra/setup.py /code/setup.py
 
-WORKDIR "/tfyolo"
+WORKDIR "/code/tfyolo"
 
 RUN wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1cewMfusmPjYWbrnuJRuKhPMwRe_b9PaT' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1cewMfusmPjYWbrnuJRuKhPMwRe_b9PaT" -O data/yolov4.weights && rm -rf /tmp/cookies.txt
 
@@ -37,6 +37,12 @@ RUN /root/miniconda/bin/conda env create -f conda-gpu.yml
 # Make RUN commands use the new environment:
 SHELL ["/root/miniconda/bin/conda", "run", "-n", "yolov4-gpu", "/bin/bash", "-c"]
 
+WORKDIR "/code"
+
+RUN pip install .
+
+WORKDIR "/code/tfyolo"
+
 RUN apt install -y libsm6 libxext6 libxrender-dev
 RUN cat "/root/miniconda/etc/profile.d/conda.sh" >> ~root/.bashrc
 
@@ -45,4 +51,4 @@ RUN python save_model.py --weights ./data/yolov4.weights --output ./checkpoints/
 RUN cp /image-gpu-classifier/detect_headless.py  .
 
 
-RUN python detect_headless.py --weights ./checkpoints/yolov4-416 --size 416 --model yolov4 --images ../test.jpg
+RUN python detect_headless.py --weights ./checkpoints/yolov4-416 --size 416 --model yolov4 --images /test.jpg
