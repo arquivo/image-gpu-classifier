@@ -21,7 +21,13 @@ RUN git clone https://github.com/arquivo/image-gpu-classifier
 
 RUN git clone https://github.com/theAIGuysCode/tensorflow-yolov4-tflite.git
 
-WORKDIR "/tensorflow-yolov4-tflite"
+RUN mv /tensorflow-yolov4-tflite /tfyolo
+
+RUN cp /image-gpu-classifier/yolo-extra/setup.py .
+
+RUN pip install .
+
+WORKDIR "/tfyolo"
 
 RUN wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1cewMfusmPjYWbrnuJRuKhPMwRe_b9PaT' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1cewMfusmPjYWbrnuJRuKhPMwRe_b9PaT" -O data/yolov4.weights && rm -rf /tmp/cookies.txt
 
@@ -37,5 +43,6 @@ RUN cat "/root/miniconda/etc/profile.d/conda.sh" >> ~root/.bashrc
 RUN python save_model.py --weights ./data/yolov4.weights --output ./checkpoints/yolov4-416 --input_size 416 --model yolov4 
 
 RUN cp /image-gpu-classifier/detect_headless.py  .
+
 
 RUN python detect_headless.py --weights ./checkpoints/yolov4-416 --size 416 --model yolov4 --images ../test.jpg
