@@ -24,16 +24,3 @@ class ClassifierNSFW(ClassifierBase):
                 single_probs[categories[j]] = float(pred)
             probs.append(single_probs)
         return probs
-
-
-from classifier_nsfw import ClassifierNSFW
-c = ClassifierNSFW("/mobilenet_v2_140_224")
-images = c.load_images(["/test.jpg"])
-classi = c.classify(images)
-
-
-
-from classifier_tags import ClassifierTags
-c = ClassifierTags("/code/tfyolo/checkpoints/yolov4-416")
-images = c.load_images(["/test.jpg"])
-classi = c.classify(images)
