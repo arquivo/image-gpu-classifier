@@ -12,19 +12,41 @@ class ClassifierBase(ABC):
     def __init__(self):
         super().__init__()
 
+    def process_image(self, image):
+        image = image.resize(self.get_image_size(), resample=Image.BILINEAR).convert('RGB')
+        image = keras.preprocessing.image.img_to_array(image)
+        image /= 255
+        return image
 
     def load_images(self, image_paths):
         images = []
+        failed = []
+        same_images = []
+        i = 0
         for image_path in image_paths:
-            if os.path.isfile(image_path):
-                image = Image.open(image_path)
-            else:
-                image = Image.open(BytesIO(base64.b64decode(image_data)))
-            image = image.resize(self.get_image_size(), resample=Image.BILINEAR).convert('RGB')
-            image = keras.preprocessing.image.img_to_array(image)
-            image /= 255
-            images.append(image)
-        return np.asarray(images)
+            try:
+                if os.path.isfile(image_path):
+                    image = Image.open(image_path)
+                else:
+                    image = Image.open(BytesIO(base64.b64decode(image_path)))
+                if image.is_animated:
+                    same_image = []
+                    for frame in range(0, image.n_frames):
+                        image.seek(frame)
+                        images.append(self.process_image(image))
+                        same_image.append(i)
+                        i += 1
+                    same_images.append(same_image)
+                else:
+                    images.append(self.process_image(image))
+                    i += 1
+            except Exception as e:
+                print(e)
+                failed.append(i)
+                i += 1
+
+            
+        return np.asarray(images), failed
 
     def get_image_size(self):
         return self.image_size
@@ -36,5 +58,3 @@ class ClassifierBase(ABC):
     def classify(self, image_datas):
         pass
 
-
-    

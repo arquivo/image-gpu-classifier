@@ -22,5 +22,10 @@ class ClassifierNSFW(ClassifierBase):
             single_probs = {}
             for j, pred in enumerate(single_preds):
                 single_probs[categories[j]] = float(pred)
+            nsfw = single_probs['porn'] + single_probs['hentai']
+            if nsfw < 0.5 and nsfw > single_probs['neutral'] and nsfw > single_probs['drawing']:
+                nsfw = 0.51
+            single_probs['nsfw'] = nsfw
             probs.append(single_probs)
         return probs
+

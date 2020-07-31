@@ -44,6 +44,7 @@ class ClassifierTags(ClassifierBase):
         for image_data in image_datas:
             batch_data = tf.constant(image_data)
             pred_bbox = infer(batch_data)
+            print(pred_bbox)
             for key, value in pred_bbox.items():
                 boxes = value[:, :, 0:4]
                 pred_conf = value[:, :, 4:]
