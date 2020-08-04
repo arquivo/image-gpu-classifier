@@ -48,11 +48,9 @@ def run_batched_images(model, image_paths, verbose=True):
                 tns = []
                 for image_loc in os.listdir(image_path):
                     if j != 0 and j % BATCH_SIZE == 0:
-                        loaded_images = model.load_images(image_paths)
-                        for i, load_image in enumerate(loaded_images.all()):
-                            if load_image == None:
-                                del safes[i]
-                                loaded_images = np.delete(loaded_images, i)
+                        loaded_images, failed, duplicates = model.load_images(image_paths)
+                        for forward, i in enumerate(failed):
+                            del safes[i-forward]
                         probs = model.classify(loaded_images)
                         tp, tn, fp, fn, tps, tns, fps, fns = compare_gt(probs, safes, tp, tn, fp, fn, tps, tns, fps, fns)
                         image_paths = []
@@ -62,11 +60,9 @@ def run_batched_images(model, image_paths, verbose=True):
                     j += 1
 
                 if len(loaded_images) > 0:
-                    loaded_images = model.load_images(image_paths)
-                    for i, load_image in enumerate(loaded_images.all()):
-                        if load_image == None:
-                            del safes[i]
-                            loaded_images = np.delete(loaded_images, i)
+                    loaded_images, failed, duplicates = model.load_images(image_paths)
+                    for forward, i in enumerate(failed):
+                        del safes[i-forward]
                     probs = model.classify(loaded_images)
                     tp, tn, fp, fn, tps, tns, fps, fns = compare_gt(probs, safes, tp, tn, fp, fn, tps, tns, fps, fns)
 
@@ -123,7 +119,7 @@ def main(args=None):
     if config['image_source'] is None or not exists(config['image_source']):
         raise ValueError("image_source must be a valid directory with images or a single image to classify.")
     
-    model = ClassifierNSFW(config['saved_model_path'])    
+    models = ClassifierNSFW(config['saved_model_path'])    
     image_preds = run_batched_images(model, [os.path.join(config['image_source'], image_path) for image_path in os.listdir(config['image_source'])])
 
 

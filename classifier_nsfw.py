@@ -14,6 +14,8 @@ class ClassifierNSFW(ClassifierBase):
         super().set_image_size((IMAGE_DIM, IMAGE_DIM))
 
     def classify(self, image_datas):
+        if image_datas == []:
+            return []
         model_preds = self.model.predict(image_datas)
         # preds = np.argsort(model_preds, axis = 1).tolist()
         categories = ['drawing', 'hentai', 'neutral', 'porn', 'sexy']

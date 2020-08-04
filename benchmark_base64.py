@@ -20,12 +20,6 @@ BATCH_SIZE = 96
 THRESHOLD = 0.5
 #! python
 
-# python benchmark_base64.py --saved_model_path mobilenet_v2_140_224/ --image_source /mnt/jsons/nsfw_BlocoEsquerda.jsonl 
-
-
-BATCH_SIZE = 96
-THRESHOLD = 0.5
-
 CATEGORIES = ['drawing', 'hentai', 'neutral', 'porn', 'sexy']
 
 def get_stats(raw_data, cat):

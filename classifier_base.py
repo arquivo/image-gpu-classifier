@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 from abc import ABC, abstractmethod
 import os
 
@@ -11,8 +13,34 @@ class ClassifierBase(ABC):
  
     def __init__(self):
         super().__init__()
+        self.do_process_image = True
+
+    def merge_labels_single(self, labels, probs): 
+        if not ("nsfw" in labels and "nsfw" in probs and probs["nsfw"] < labels["nsfw"]):
+            labels.update(probs)
+        return labels
+
+    def merge_labels(self, probs, image_paths, failed, duplicates):
+        labels = []
+        i = 0
+        for j, image_path in enumerate(image_paths):
+            if j in failed:
+                labels.append({})
+            elif j in duplicates:
+                labels.append({})
+                for _ in duplicates[j]:
+                    l = self.merge_labels_single(labels[-1], probs[i])
+                    labels[-1] = l
+                    i += 1
+            else:
+                labels.append(probs[i])
+                i += 1
+        return labels
+
 
     def process_image(self, image):
+        if not self.do_process_image:
+            return image
         image = image.resize(self.get_image_size(), resample=Image.BILINEAR).convert('RGB')
         image = keras.preprocessing.image.img_to_array(image)
         image /= 255
@@ -21,32 +49,34 @@ class ClassifierBase(ABC):
     def load_images(self, image_paths):
         images = []
         failed = []
-        same_images = []
+        same_images = {}
         i = 0
-        for image_path in image_paths:
+        for j, image_path in enumerate(image_paths):
             try:
                 if os.path.isfile(image_path):
                     image = Image.open(image_path)
                 else:
                     image = Image.open(BytesIO(base64.b64decode(image_path)))
-                if image.is_animated:
+                if getattr(image, "is_animated", False):
                     same_image = []
                     for frame in range(0, image.n_frames):
                         image.seek(frame)
                         images.append(self.process_image(image))
                         same_image.append(i)
                         i += 1
-                    same_images.append(same_image)
+                    same_images[j] = same_image
                 else:
                     images.append(self.process_image(image))
                     i += 1
             except Exception as e:
                 print(e)
-                failed.append(i)
+                failed.append(j)
                 i += 1
 
-            
-        return np.asarray(images), failed
+        if self.do_process_image:
+            return np.asarray(images), failed, same_images
+        else:
+            return images, failed, same_images
 
     def get_image_size(self):
         return self.image_size
@@ -57,4 +87,7 @@ class ClassifierBase(ABC):
     @abstractmethod
     def classify(self, image_datas):
         pass
+
+
+    
 

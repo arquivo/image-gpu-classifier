@@ -43,6 +43,8 @@ WORKDIR "/code"
 
 RUN pip install .
 
+RUN pip install colorthief
+
 WORKDIR "/code/tfyolo"
 
 RUN apt install -y libsm6 libxext6 libxrender-dev

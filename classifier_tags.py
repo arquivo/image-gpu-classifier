@@ -33,21 +33,22 @@ class ClassifierTags(ClassifierBase):
         self.session = InteractiveSession(config=self.config)
         super().set_image_size((FLAGS['size'], FLAGS['size']))
         # load model
+        self.do_process_image = True
         self.saved_model_loaded = tf.saved_model.load(model_path, tags=[tag_constants.SERVING])
 
 
     def classify(self, image_datas):
-
-        image_datas = np.asarray([image_datas]).astype(np.float32)
+        if image_datas == []:
+            return []
+        image_datas = np.asarray(image_datas).astype(np.float32)
         infer = self.saved_model_loaded.signatures['serving_default']
         output = []
-        for image_data in image_datas:
-            batch_data = tf.constant(image_data)
-            pred_bbox = infer(batch_data)
-            print(pred_bbox)
-            for key, value in pred_bbox.items():
-                boxes = value[:, :, 0:4]
-                pred_conf = value[:, :, 4:]
+        batch_data = tf.constant(image_datas)
+        pred_bbox = infer(batch_data)
+        value = pred_bbox["tf_op_layer_concat_18"]
+        for i in range(value.shape[0]):
+            boxes = value[i:i+1, :, 0:4]
+            pred_conf = value[i:i+1, :, 4:]
             boxes, scores, classes, valid_detections = tf.image.combined_non_max_suppression(
                 boxes=tf.reshape(boxes, (tf.shape(boxes)[0], -1, 1, 4)),
                 scores=tf.reshape(
@@ -59,8 +60,10 @@ class ClassifierTags(ClassifierBase):
             )
             classes_names = utils.read_class_names(cfg.YOLO.CLASSES)
             classes_found = defaultdict(float)
-            for class_i, score_i in zip(classes.numpy()[0], scores.numpy()[0]):
-                if score_i > 0:
-                    classes_found[classes_names[class_i]] += score_i 
+            if classes.numpy().size != 0:
+                for class_i, score_i in zip(classes.numpy()[0], scores.numpy()[0]):
+                    if score_i > 0:
+                        classes_found[classes_names[class_i]] += score_i 
             output.append(classes_found)
+        print(output)
         return output
