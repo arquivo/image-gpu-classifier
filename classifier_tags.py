@@ -65,5 +65,4 @@ class ClassifierTags(ClassifierBase):
                     if score_i > 0:
                         classes_found[classes_names[class_i]] += score_i 
             output.append(classes_found)
-        print(output)
         return output
