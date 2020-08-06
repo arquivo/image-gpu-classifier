@@ -13,7 +13,7 @@ class ClassifierBase(ABC):
  
     def __init__(self):
         super().__init__()
-        self.do_process_image = True
+        self.do_process_image = False
 
     def merge_labels_single(self, labels, probs): 
         if not ("nsfw" in labels and "nsfw" in probs and probs["nsfw"] < labels["nsfw"]):
@@ -38,13 +38,16 @@ class ClassifierBase(ABC):
         return labels
 
 
-    def process_image(self, image):
+    def process_image(self, images):
         if not self.do_process_image:
-            return image
-        image = image.resize(self.get_image_size(), resample=Image.BILINEAR).convert('RGB')
-        image = keras.preprocessing.image.img_to_array(image)
-        image /= 255
-        return image
+            return images
+        output = []
+        for image in images:
+            image = image.resize(self.get_image_size(), resample=Image.BILINEAR).convert('RGB')
+            image = keras.preprocessing.image.img_to_array(image)
+            image /= 255
+            output.append(image)
+        return np.asarray(output)
 
     def load_images(self, image_paths):
         images = []
@@ -84,9 +87,8 @@ class ClassifierBase(ABC):
     def set_image_size(self, image_size):
         self.image_size = image_size
 
-    @abstractmethod
     def classify(self, image_datas):
-        pass
+        return {}
 
 
     

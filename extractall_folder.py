@@ -13,47 +13,46 @@ from os.path import isfile, join, exists, isdir, abspath
 import numpy as np
 import sys
 
+import time
+
 from classifier_nsfw import ClassifierNSFW
 from classifier_color import ClassifierColor
 from classifier_tags import ClassifierTags
+from classifier_base import ClassifierBase
 
 BATCH_SIZE = 96
 
 def run_batched_images(models, image_paths, verbose=True):
     output = []
+    base = ClassifierBase()
     for image_path in image_paths:
         j = 0
         image_paths = []
         image_labelled = OrderedDict()
-        for image_loc in os.listdir(image_path):
-            if j != 0 and j % BATCH_SIZE == 0:
+        files = os.listdir(image_path)
+        t0 = time.time()
+        for image_loc in files:
+            if (j != 0 and j % BATCH_SIZE == 0) or (j == (len(files)-1)):
+                if j == (len(files)-1):
+                    image_paths.append(os.path.join(image_path, image_loc))
                 image_paths_labelled = []
+                loaded_images, failed, duplicates = base.load_images(image_paths)
                 for model in models:
-                    loaded_images, failed, duplicates = model.load_images(image_paths)
-                    probs = model.classify(loaded_images)
+                    processed_images = model.process_image(loaded_images)
+                    probs = model.classify(processed_images)
                     image_paths_labelled_inner = model.merge_labels(probs, image_paths, failed, duplicates)
                     if image_paths_labelled == []:
                         image_paths_labelled = image_paths_labelled_inner
                     else:
                         for i, new in enumerate(image_paths_labelled_inner):
                             image_paths_labelled[i].update(new)
-
+                print((time.time() - t0)/BATCH_SIZE)
+                print(BATCH_SIZE/(time.time() - t0))
+                t0 = time.time()
                 output += [aa for aa in zip(image_paths, image_paths_labelled)]
                 image_paths = []
             image_paths.append(os.path.join(image_path, image_loc))
             j += 1
-        if len(image_paths) > 0:
-            image_paths_labelled = []
-            for model in models:
-                loaded_images, failed, duplicates = model.load_images(image_paths)
-                probs = model.classify(loaded_images)
-                image_paths_labelled_inner = model.merge_labels(probs, image_paths, failed, duplicates)
-                if image_paths_labelled == []:
-                    image_paths_labelled = image_paths_labelled_inner
-                else:
-                    for i, new in enumerate(image_paths_labelled_inner):
-                        image_paths_labelled[i].update(new)
-            output += [aa for aa in zip(image_paths, image_paths_labelled)]
     print(output)
 
 def main(args=None):

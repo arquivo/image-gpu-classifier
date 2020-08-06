@@ -11,6 +11,7 @@ class ClassifierNSFW(ClassifierBase):
         IMAGE_DIM = 224
         super().__init__()
         self.model = tf.keras.models.load_model(model_path)
+        self.do_process_image = True
         super().set_image_size((IMAGE_DIM, IMAGE_DIM))
 
     def classify(self, image_datas):
