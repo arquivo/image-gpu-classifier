@@ -28,7 +28,7 @@ class ClassifierNSFW(ClassifierBase):
             nsfw = single_probs['porn'] + single_probs['hentai']
             if nsfw < 0.5 and nsfw > single_probs['neutral'] and nsfw > single_probs['drawing']:
                 nsfw = 0.51
-            single_probs['nsfw'] = nsfw
+            single_probs['safe'] = nsfw
             probs.append(single_probs)
         return probs
 

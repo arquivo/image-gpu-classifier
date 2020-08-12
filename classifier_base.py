@@ -77,7 +77,7 @@ class ClassifierBase(ABC):
                     images.append(self.process_image(image, do_process_image))
                     i += 1
             except Exception as e:
-                print(e)
+                print(len(image_path), e)
                 failed.append(j)
                 i += 1
 
