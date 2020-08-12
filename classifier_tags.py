@@ -35,17 +35,17 @@ class ClassifierTags(ClassifierBase):
         # load model
         self.do_process_image = True
         self.saved_model_loaded = tf.saved_model.load(model_path, tags=[tag_constants.SERVING])
+        self.infer = self.saved_model_loaded.signatures['serving_default']
 
 
     def classify(self, image_datas):
         if image_datas == []:
             return []
-        image_datas = np.asarray(image_datas).astype(np.float32)
-        infer = self.saved_model_loaded.signatures['serving_default']
         output = []
-        batch_data = tf.constant(image_datas)
-        pred_bbox = infer(batch_data)
-        value = pred_bbox["tf_op_layer_concat_18"]
+        batch_data = tf.constant(image_datas.astype(np.float32))
+        print(batch_data[:3,:3,:3,:3])
+        pred_bbox = self.infer(batch_data)
+        value = pred_bbox["tf_op_layer_concat_18"]      
         for i in range(value.shape[0]):
             boxes = value[i:i+1, :, 0:4]
             pred_conf = value[i:i+1, :, 4:]

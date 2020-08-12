@@ -20,12 +20,12 @@ from classifier_color import ClassifierColor
 from classifier_tags import ClassifierTags
 from classifier_base import ClassifierBase
 
-BATCH_SIZE = 96
+BATCH_SIZE = 1
 
-def run_batched_images(models, image_paths, verbose=True):
+def run_batched_images(models, images, verbose=True):
     output = []
     base = ClassifierBase()
-    for image_path in image_paths:
+    for image_path in images:
         j = 0
         image_paths = []
         image_labelled = OrderedDict()
@@ -40,20 +40,14 @@ def run_batched_images(models, image_paths, verbose=True):
                 for model in models:
                     processed_images = model.process_image(loaded_images)
                     probs = model.classify(processed_images)
-                    image_paths_labelled_inner = model.merge_labels(probs, image_paths, failed, duplicates)
-                    if image_paths_labelled == []:
-                        image_paths_labelled = image_paths_labelled_inner
-                    else:
-                        for i, new in enumerate(image_paths_labelled_inner):
-                            image_paths_labelled[i].update(new)
-                print((time.time() - t0)/BATCH_SIZE)
-                print(BATCH_SIZE/(time.time() - t0))
-                t0 = time.time()
-                output += [aa for aa in zip(image_paths, image_paths_labelled)]
+                    image_paths_labelled_inner, image_paths_labelled_inner_dict = model.merge_labels(probs, image_paths, failed, duplicates)
+                    for image_path in image_paths:
+                        if image_path in image_paths_labelled_inner_dict:
+                            output += [image_path, image_paths_labelled_inner_dict[image_path]]
                 image_paths = []
             image_paths.append(os.path.join(image_path, image_loc))
             j += 1
-    print(output)
+    print("\n".join(output))
 
 def main(args=None):
     parser = argparse.ArgumentParser(
