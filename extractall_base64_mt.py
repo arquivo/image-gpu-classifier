@@ -63,14 +63,14 @@ def my_service(image_path, model, batch_size):
             processed_images, failed, duplicates = model.load_images(image_paths,True)
             batch_queue.put( (processed_images, failed, duplicates, image_ids, stored_lines) )
 
-def run_batched_images(models, images, verbose=True): 
+def run_batched_images(models, images, batch_size): 
     model = models[0]
     for image_path in images:
         if image_path.endswith(".jsonl"):
             t0 = time.time()
             count = 0
             j = 0
-            t = threading.Thread(name='my_service', target=my_service, args=(image_path,model))
+            t = threading.Thread(name='my_service', target=my_service, args=(image_path, model, batch_size))
             t.start()
             with open(image_path[:-6] + "_nsfw.jsonl", "w") as out:
                 while t.isAlive() or not batch_queue.empty():
@@ -111,7 +111,7 @@ def main(args=None):
         raise ValueError("image_source must be a valid directory with images or a single image to classify.")
     
     models = [ClassifierNSFW("/mobilenet_v2_140_224")]
-    image_preds = run_batched_images(models, [os.path.join(config['image_source'], f) for f in os.listdir(config['image_source'])])
+    image_preds = run_batched_images(models, [os.path.join(config['image_source'], f) for f in os.listdir(config['image_source'])], config['batch_size'])
 
 
 if __name__ == "__main__":
