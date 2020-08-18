@@ -22,11 +22,7 @@ import logging
 # get TF logger
 log = logging.getLogger('tensorflow')
 
-BATCH_SIZE = 96
-#BATCH_SIZE = 128
-#BATCH_SIZE = 64
-
-# python benchmark_base64.py --saved_model_path mobilenet_v2_140_224/ --image_source /mnt/jsons/nsfw_BlocoEsquerda.jsonl 
+SLEEP_IF_IMAGES_DONE = 10000
 
 
 batch_queue = queue.Queue()
@@ -52,6 +48,9 @@ def my_service(image_path, model, batch_size):
                     image_paths = []
                     image_ids = []
                     stored_lines = OrderedDict()
+                    while batch_queue.qsize()*batch_size > SLEEP_IF_IMAGES_DONE:
+                        print(batch_queue.qsize(), batch_size*SLEEP_IF_IMAGES_DONE)
+                        time.sleep(5)
                 image_data = line["imgSrcBase64"]
                 image_paths.append(image_data)
                 image_ids.append(image_id)
@@ -84,6 +83,9 @@ def run_batched_images(models, images, batch_size):
                         if stored_line_id in image_paths_labelled:
                             for l in stored_lines[stored_line_id]:
                                 l.update(image_paths_labelled[stored_line_id])
+                    for stored_line_id in stored_lines:
+                        for l in stored_lines[stored_line_id]:
+                            out.write(json.dumps(l) + "\n")
                     print(count / (time.time()  - t0), j / (time.time()  - t0), batch_queue.qsize())
             t.join()
 
