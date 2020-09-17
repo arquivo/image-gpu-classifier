@@ -2,8 +2,12 @@ FROM tensorflow/tensorflow:latest-gpu-py3
 
 RUN apt update -y
 
-RUN apt install unzip wget nano git -y
+RUN apt install unzip wget nano git openjdk-8-jre -y
 RUN pip3 install pillow
+
+RUN wget https://archive.apache.org/dist/hadoop/common/hadoop-3.2.1/hadoop-3.2.1.tar.gz
+RUN tar -xf hadoop-3.2.1.tar.gz
+RUN export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/
 
 RUN wget https://github.com/GantMan/nsfw_model/releases/download/1.1.0/nsfw_mobilenet_v2_140_224.zip
 RUN wget https://github.com/GantMan/nsfw_model/releases/download/1.2.0/mobilenet_v2_140_224.1.zip
@@ -44,7 +48,7 @@ WORKDIR "/code/tfyolo"
 
 RUN pip install .
 
-RUN pip install colorthief
+RUN pip install colorthief pika
 
 RUN apt install -y libsm6 libxext6 libxrender-dev
 

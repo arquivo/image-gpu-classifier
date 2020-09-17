@@ -62,32 +62,43 @@ def my_service(image_path, model, batch_size):
             processed_images, failed, duplicates = model.load_images(image_paths,True)
             batch_queue.put( (processed_images, failed, duplicates, image_ids, stored_lines) )
 
+def parse_file(image_path, model, batch_size):
+    t0 = time.time()
+    count = 0
+    j = 0
+    t = threading.Thread(name='my_service', target=my_service, args=(image_path, model, batch_size))
+    t.start()
+    with open(image_path + "_pages.jsonl", "w") as outP:
+        with open(image_path + "_images.jsonl", "w") as outI:
+            while t.isAlive() or not batch_queue.empty():
+                (processed_images, failed, duplicates, image_ids, stored_lines) = batch_queue.get()
+                count += len(processed_images)
+                j += len(stored_lines)
+                probs = model.classify(processed_images)
+                image_paths_labelled_inner, image_paths_labelled_inner_dict = model.merge_labels(probs, image_ids, failed, duplicates)
+                image_paths_labelled = image_paths_labelled_inner_dict
+                for stored_line_id in stored_lines:
+                    if stored_line_id in image_paths_labelled:
+                        for l in stored_lines[stored_line_id]:
+                            l.update(image_paths_labelled[stored_line_id])
+                for stored_line_id in stored_lines:
+                    for l in stored_lines[stored_line_id]:
+                        if "type" in l:
+                            outP.write(json.dumps(l) + "\n")
+                        elif l["type"] == 'image':
+                            outI.write(json.dumps(l) + "\n")
+                        else:
+                            outP.write(json.dumps(l) + "\n")
+                print(count / (time.time()  - t0), j / (time.time()  - t0), batch_queue.qsize())
+    t.join()
+
+
 def run_batched_images(models, images, batch_size): 
     model = models[0]
     for image_path in images:
         if image_path.endswith(".jsonl"):
-            t0 = time.time()
-            count = 0
-            j = 0
-            t = threading.Thread(name='my_service', target=my_service, args=(image_path, model, batch_size))
-            t.start()
-            with open(image_path[:-6] + "_nsfw.jsonl", "w") as out:
-                while t.isAlive() or not batch_queue.empty():
-                    (processed_images, failed, duplicates, image_ids, stored_lines) = batch_queue.get()
-                    count += len(processed_images)
-                    j += len(stored_lines)
-                    probs = model.classify(processed_images)
-                    image_paths_labelled_inner, image_paths_labelled_inner_dict = model.merge_labels(probs, image_ids, failed, duplicates)
-                    image_paths_labelled = image_paths_labelled_inner_dict
-                    for stored_line_id in stored_lines:
-                        if stored_line_id in image_paths_labelled:
-                            for l in stored_lines[stored_line_id]:
-                                l.update(image_paths_labelled[stored_line_id])
-                    for stored_line_id in stored_lines:
-                        for l in stored_lines[stored_line_id]:
-                            out.write(json.dumps(l) + "\n")
-                    print(count / (time.time()  - t0), j / (time.time()  - t0), batch_queue.qsize())
-            t.join()
+            parse_file(image_path, model, batch_size)
+
 
 def main(args=None):
     parser = argparse.ArgumentParser(
@@ -99,7 +110,7 @@ def main(args=None):
     
     submain = parser.add_argument_group('main execution and evaluation functionality')
     submain.add_argument('--image_source', dest='image_source', type=str, required=True, 
-                            help='A directory of images or a single image to classify')
+                            help='A directory of json images')
 
     submain.add_argument('--batch_size', dest='batch_size', type=int, required=True, 
                         help='Keras batch size')
