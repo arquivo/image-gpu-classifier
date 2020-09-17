@@ -28,7 +28,7 @@ def on_message(ch, method, properties, body):
 
     image_path = "{}/{}".format(HOST_PATH,FILENAME)
     extractall_base64_mt.parse_file(image_path, model, BATCH_SIZE)
-    nsfw_image_path = "{}/{}_pages.jsonl".format(HOST_PATH,,FILENAME)
+    nsfw_image_path = "{}/{}_pages.jsonl".format(HOST_PATH,FILENAME)
 
     result = "{},{},{}".format(nsfw_image_path)
     channel.basic_publish(exchange='', routing_key='log', body="{},{},{}".format("post",time.time(),nsfw_image_path))
