@@ -81,7 +81,7 @@ class ClassifierBase(ABC):
                 failed.append(j)
                 i += 1
 
-        if self.do_process_image:
+        if do_process_image:
             return np.asarray(images), failed, same_images
         else:
             return images, failed, same_images
