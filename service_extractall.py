@@ -1,5 +1,6 @@
 #! python
 import pika
+import subprocess
 
 from classifier_nsfw import ClassifierNSFW
 import extractall_base64_mt
@@ -21,16 +22,21 @@ def on_message(ch, method, properties, body):
     COLLECTION = sbody[-3]
     FILENAME = "/".join(sbody[-2:])
 
-    p = subprocess.Popen(HDFS_COMMAND.format(body,FILENAME),
+    p = subprocess.Popen(HDFS_COMMAND.format(body,HADOOP_PATH,FILENAME),
         shell=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT)
 
-    image_path = "{}/{}".format(HOST_PATH,FILENAME)
+    image_path = "{}/{}".format(HADOOP_PATH,FILENAME)
     extractall_base64_mt.parse_file(image_path, model, BATCH_SIZE)
     nsfw_image_path = "{}/{}_pages.jsonl".format(HOST_PATH,FILENAME)
 
-    result = "{},{},{}".format(nsfw_image_path)
+    #result = "{},{},{}".format(nsfw_image_path)
+    connection = pika.BlockingConnection(pika.ConnectionParameters('p90.arquivo.pt'))
+    channel = connection.channel()
+    channel.queue_declare(queue='post')
+    channel.queue_declare(queue='log')
+
     channel.basic_publish(exchange='', routing_key='log', body="{},{},{}".format("post",time.time(),nsfw_image_path))
     channel.basic_publish(exchange='', routing_key='post', body=nsfw_image_path)
     

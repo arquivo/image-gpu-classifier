@@ -83,7 +83,7 @@ def parse_file(image_path, model, batch_size):
                             l.update(image_paths_labelled[stored_line_id])
                 for stored_line_id in stored_lines:
                     for l in stored_lines[stored_line_id]:
-                        if "type" in l:
+                        if not "type" in l:
                             outP.write(json.dumps(l) + "\n")
                         elif l["type"] == 'image':
                             outI.write(json.dumps(l) + "\n")
