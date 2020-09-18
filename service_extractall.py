@@ -18,6 +18,7 @@ model = ClassifierNSFW("/mobilenet_v2_140_224")
 
 def on_message(ch, method, properties, body):
     print(" [x] Received %r" % body)
+    body = body.decode("utf-8")
     sbody = body.split("/")
     COLLECTION = sbody[-3]
     FILENAME = "/".join(sbody[-2:])
