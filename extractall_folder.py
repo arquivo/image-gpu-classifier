@@ -23,7 +23,7 @@ from classifier_base import ClassifierBase
 BATCH_SIZE = 1
 
 def run_batched_images(models, images, verbose=True):
-    output = []
+    output = {}
     base = ClassifierBase()
     for image_path in images:
         j = 0
@@ -38,16 +38,18 @@ def run_batched_images(models, images, verbose=True):
                 image_paths_labelled = []
                 loaded_images, failed, duplicates = base.load_images(image_paths)
                 for model in models:
-                    processed_images = model.process_image(loaded_images)
+                    processed_images = model.process_images(loaded_images,model.do_process_images())
                     probs = model.classify(processed_images)
                     image_paths_labelled_inner, image_paths_labelled_inner_dict = model.merge_labels(probs, image_paths, failed, duplicates)
                     for image_path in image_paths:
+                        if not image_path in output:
+                            output[image_path] = {}
                         if image_path in image_paths_labelled_inner_dict:
-                            output += [image_path, image_paths_labelled_inner_dict[image_path]]
+                            output[image_path].update(image_paths_labelled_inner_dict[image_path])
                 image_paths = []
             image_paths.append(os.path.join(image_path, image_loc))
             j += 1
-    print("\n".join(output))
+    print(output)
 
 def main(args=None):
     parser = argparse.ArgumentParser(

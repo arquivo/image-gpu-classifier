@@ -43,7 +43,6 @@ class ClassifierTags(ClassifierBase):
             return []
         output = []
         batch_data = tf.constant(image_datas.astype(np.float32))
-        print(batch_data[:3,:3,:3,:3])
         pred_bbox = self.infer(batch_data)
         value = pred_bbox["tf_op_layer_concat_18"]      
         for i in range(value.shape[0]):

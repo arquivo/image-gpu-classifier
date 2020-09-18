@@ -13,6 +13,7 @@ class ClassifierBase(ABC):
  
     def __init__(self):
         super().__init__()
+        self.do_process_image = False
 
     def merge_labels_single(self, labels, probs): 
         if not ("nsfw" in labels and "nsfw" in probs and probs["nsfw"] < labels["nsfw"]):
@@ -94,6 +95,9 @@ class ClassifierBase(ABC):
 
     def classify(self, image_datas):
         return {}
+
+    def do_process_images(self):
+        return self.do_process_image
 
 
     
