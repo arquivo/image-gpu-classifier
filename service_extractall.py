@@ -13,7 +13,7 @@ import extractall_base64_mt
 BATCH_SIZE = 512
 HOST = os.environ['HOST']
 
-HDFS_COMMAND="/hadoop-3.2.1/bin/hdfs dfs -fs hdfs://p43.arquivo.pt:9000 -copyToLocal {} {}/{}"
+HDFS_COMMAND="/hadoop-3.2.1/bin/hdfs dfs -fs hdfs://p43.arquivo.pt:9000 -copyToLocal -f {} {}/{}"
 HADOOP_PATH="/mnt/jsons"
 HOST_PATH="/data/images/pipe"
 
