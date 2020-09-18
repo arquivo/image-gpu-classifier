@@ -26,8 +26,7 @@ def on_message(ch, method, properties, body):
     COLLECTION = sbody[-3]
     FILENAME = "/".join(sbody[-2:])
 
-    p = subprocess.run(HDFS_COMMAND.format(body,HADOOP_PATH,FILENAME),
-        shell=True)
+    p = subprocess.run(HDFS_COMMAND.format(body,HADOOP_PATH,FILENAME).split(" "))
 
     image_path = "{}/{}".format(HADOOP_PATH,FILENAME)
     extractall_base64_mt.parse_file(image_path, model, BATCH_SIZE)
