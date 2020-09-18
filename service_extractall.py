@@ -1,11 +1,14 @@
 #! python
-import pika
 import subprocess
+import os
+import time
+
+import pika
 
 from classifier_nsfw import ClassifierNSFW
 import extractall_base64_mt
 
-import os
+
 
 BATCH_SIZE = 512
 HOST = os.environ['HOST']
