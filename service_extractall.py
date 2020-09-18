@@ -24,13 +24,17 @@ def on_message(ch, method, properties, body):
     body = body.decode("utf-8")
     sbody = body.split("/")
     COLLECTION = sbody[-3]
-    FILENAME = "/".join(sbody[-2:])
+    TIMESTAMP = sbody[-2]
 
-    p = subprocess.run(HDFS_COMMAND.format(body,HADOOP_PATH,FILENAME).split(" "))
+    FOLDER = "/".join(sbody[-3:-1])
+    FILENAME = "/".join(sbody[-3:])
 
-    image_path = "{}/{}".format(HADOOP_PATH,FILENAME)
+    p = subprocess.run("mkdir -p {}/{}".format(HADOOP_PATH, FOLDER).split(" "))
+    p = subprocess.run(HDFS_COMMAND.format(body, HADOOP_PATH, FILENAME).split(" "))
+
+    image_path = "{}/{}".format(HADOOP_PATH, FILENAME)
     extractall_base64_mt.parse_file(image_path, model, BATCH_SIZE)
-    nsfw_image_path = "{}/{}_pages.jsonl".format(HOST_PATH,FILENAME)
+    nsfw_image_path = "{}/{}_pages.jsonl".format(HOST_PATH, FILENAME)
 
     #result = "{},{},{}".format(nsfw_image_path)
     connection = pika.BlockingConnection(pika.ConnectionParameters('p90.arquivo.pt'))
@@ -38,7 +42,7 @@ def on_message(ch, method, properties, body):
     channel.queue_declare(queue='post')
     channel.queue_declare(queue='log')
 
-    channel.basic_publish(exchange='', routing_key='log', body="{},{},{}".format("post",time.time(),nsfw_image_path))
+    channel.basic_publish(exchange='', routing_key='log', body="{},{},{}".format("post", time.time(), nsfw_image_path))
     channel.basic_publish(exchange='', routing_key='post', body=nsfw_image_path)
     
 def main(args=None):
