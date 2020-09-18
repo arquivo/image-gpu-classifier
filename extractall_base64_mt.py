@@ -50,7 +50,7 @@ def my_service(image_path, model, batch_size):
                     stored_lines = OrderedDict()
                     while batch_queue.qsize()*batch_size > SLEEP_IF_IMAGES_DONE:
                         print(batch_queue.qsize(), batch_size*SLEEP_IF_IMAGES_DONE)
-                        time.sleep(5)
+                        time.sleep(1)
                 image_data = line["imgSrcBase64"]
                 image_paths.append(image_data)
                 image_ids.append(image_id)
@@ -61,6 +61,7 @@ def my_service(image_path, model, batch_size):
         if len(stored_lines) > 0:
             processed_images, failed, duplicates = model.load_images(image_paths,True)
             batch_queue.put( (processed_images, failed, duplicates, image_ids, stored_lines) )
+    batch_queue.put( None )
 
 def parse_file(image_path, model, batch_size):
     t0 = time.time()
@@ -70,8 +71,11 @@ def parse_file(image_path, model, batch_size):
     t.start()
     with open(image_path + "_pages.jsonl", "w") as outP:
         with open(image_path + "_images.jsonl", "w") as outI:
-            while t.isAlive() or not batch_queue.empty():
-                (processed_images, failed, duplicates, image_ids, stored_lines) = batch_queue.get()
+            while True:
+                msg = batch_queue.get()
+                if msg == None:
+                    break
+                (processed_images, failed, duplicates, image_ids, stored_lines) = msg
                 count += len(processed_images)
                 j += len(stored_lines)
                 probs = model.classify(processed_images)

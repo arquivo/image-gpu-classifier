@@ -37,14 +37,13 @@ def on_message(ch, method, properties, body):
     nsfw_image_path = "{}/{}_pages.jsonl".format(HOST_PATH, FILENAME)
 
     #result = "{},{},{}".format(nsfw_image_path)
-    connection = pika.BlockingConnection(pika.ConnectionParameters('p90.arquivo.pt'))
-    channel = connection.channel()
-    channel.queue_declare(queue='post')
-    channel.queue_declare(queue='log')
+    ch.queue_declare(queue='post')
+    ch.queue_declare(queue='log')
 
-    channel.basic_publish(exchange='', routing_key='log', body="{},{},{}".format("post", time.time(), nsfw_image_path))
-    channel.basic_publish(exchange='', routing_key='post', body=nsfw_image_path)
-    
+    ch.basic_publish(exchange='', routing_key='log', body="{},{},{}".format("post", time.time(), nsfw_image_path))
+    ch.basic_publish(exchange='', routing_key='post', body=nsfw_image_path)    
+    ch.basic_ack(method.delivery_tag)
+
 def main(args=None):
     
     connection = pika.BlockingConnection(pika.ConnectionParameters('p90.arquivo.pt'))
