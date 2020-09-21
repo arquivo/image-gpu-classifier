@@ -45,8 +45,10 @@ def on_message(ch, method, properties, body):
     ch.basic_ack(method.delivery_tag)
 
 def main(args=None):
+
+    TIMEOUT = 3600
     
-    connection = pika.BlockingConnection(pika.ConnectionParameters('p90.arquivo.pt'))
+    connection = pika.BlockingConnection(pika.ConnectionParameters('p90.arquivo.pt', heartbeat=TIMEOUT,blocked_connection_timeout=TIMEOUT))
     channel = connection.channel()
 
     channel.queue_declare(queue='nsfw')
