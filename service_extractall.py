@@ -40,13 +40,13 @@ def on_message(ch, method, properties, body):
     ch.queue_declare(queue='post')
     ch.queue_declare(queue='log')
 
-    ch.basic_publish(exchange='', routing_key='log', body="{},{},{}".format("post", time.time(), nsfw_image_path))
-    ch.basic_publish(exchange='', routing_key='post', body=nsfw_image_path)    
+    ch.basic_publish(exchange='', routing_key='log', body="{},{},{}".format("post", time.time(), nsfw_image_path, HOST))
+    ch.basic_publish(exchange='', routing_key='post', body="{},{}".format(nsfw_image_path, HOST))   
     ch.basic_ack(method.delivery_tag)
 
 def main(args=None):
 
-    TIMEOUT = 3600
+    TIMEOUT = 3600*5
     
     connection = pika.BlockingConnection(pika.ConnectionParameters('p90.arquivo.pt', heartbeat=TIMEOUT,blocked_connection_timeout=TIMEOUT))
     channel = connection.channel()
