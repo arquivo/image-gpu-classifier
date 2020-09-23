@@ -6,6 +6,7 @@ import time
 import pika
 
 from classifier_nsfw import ClassifierNSFW
+from metaclassifier_blocked import MetaClassifierBlocked
 import extractall_base64_mt
 
 
@@ -18,6 +19,7 @@ HADOOP_PATH="/mnt/jsons"
 HOST_PATH="/data/images/pipe"
 
 model = ClassifierNSFW("/mobilenet_v2_140_224")
+metamodels = [MetaClassifierBlocked("https://docs.google.com/spreadsheets/d/1PM4evPp8_v46N_Rd0Klsv8uFiKZGC5cxu1NCJxFhKFI/export?format=csv&id=1PM4evPp8_v46N_Rd0Klsv8uFiKZGC5cxu1NCJxFhKFI&gid=0")]
 
 def on_message(ch, method, properties, body):
     print(" [x] Received %r" % body)
@@ -33,7 +35,7 @@ def on_message(ch, method, properties, body):
     p = subprocess.run(HDFS_COMMAND.format(body, HADOOP_PATH, FILENAME).split(" "))
 
     image_path = "{}/{}".format(HADOOP_PATH, FILENAME)
-    extractall_base64_mt.parse_file(image_path, model, BATCH_SIZE)
+    extractall_base64_mt.parse_file(image_path, model, metamodels, BATCH_SIZE)
     nsfw_image_path = "{}/{}_pages.jsonl".format(HOST_PATH, FILENAME)
 
     #result = "{},{},{}".format(nsfw_image_path)
