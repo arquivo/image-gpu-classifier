@@ -18,8 +18,11 @@ class MetaClassifierBlocked():
             self.regexes.append(re.compile(r))
 
     def classify(self, jsonline):
+        fields = ['pageHost', 'imgSrc']
         for regex in self.regexes:
-            if regex.search(jsonline['pageHost']):
-                jsonline['blocked'] = 1
-                return jsonline
+            for field in fields:
+                if field in jsonline and regex.search(jsonline[field].lower()):
+                    jsonline['blocked'] = 1
+                    return jsonline
+
         return jsonline
