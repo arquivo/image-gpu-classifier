@@ -19,7 +19,7 @@ class MetaClassifierBlocked():
 
     def classify(self, jsonline):
         for regex in self.regexes:
-            if regex.search(jsonline['url']):
+            if regex.search(jsonline['pageHost']):
                 jsonline['blocked'] = 1
                 return jsonline
         return jsonline
