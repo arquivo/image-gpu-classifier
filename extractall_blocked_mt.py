@@ -70,7 +70,6 @@ def parse_file(image_path, metamodels, batch_size):
             for stored_line_id in stored_lines:
                 for l in stored_lines[stored_line_id]:
                     outP.write(json.dumps(l, ensure_ascii=False) + "\n")
-            print(count / (time.time()  - t0), j / (time.time()  - t0), batch_queue.qsize())
     t.join()
 
 
