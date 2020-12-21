@@ -1,7 +1,8 @@
 import csv
 import requests
 import re
-
+import json
+import sys
 
 class MetaClassifierBlocked():
 
@@ -12,17 +13,20 @@ class MetaClassifierBlocked():
         my_list = list(cr)
         self.regexes = []
         for row in my_list:
-            r = row[0]
+            r = row[0].strip()
             if r.endswith("/"):
                 r = r[:-1]
-            self.regexes.append(re.compile(r))
+            r = r.replace("?","\?").lower()
+            self.regexes.append(re.compile("^"+r+".*"))
 
     def classify(self, jsonline):
-        fields = ['pageHost', 'imgSrc']
-        for regex in self.regexes:
-            for field in fields:
-                if field in jsonline and regex.search(jsonline[field].lower()):
-                    jsonline['blocked'] = 1
-                    return jsonline
-
+        jsonline['blocked'] = 0.0
+        fields = ['pageHost', 'imgUrl', 'pageUrl']
+        for field in fields:
+            if field in jsonline:
+                url = re.sub('^http[s]?://(www.)?', '', jsonline[field].lower())
+                for regex in self.regexes:
+                    if regex.search(url):
+                        jsonline['blocked'] = 1.0
+                        return jsonline
         return jsonline
