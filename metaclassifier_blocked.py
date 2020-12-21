@@ -20,13 +20,13 @@ class MetaClassifierBlocked():
             self.regexes.append(re.compile("^"+r+".*"))
 
     def classify(self, jsonline):
-        jsonline['blocked'] = 0.0
+        jsonline['blocked'] = 0
         fields = ['pageHost', 'imgUrl', 'pageUrl']
         for field in fields:
             if field in jsonline:
                 url = re.sub('^http[s]?://(www.)?', '', jsonline[field].lower())
                 for regex in self.regexes:
                     if regex.search(url):
-                        jsonline['blocked'] = 1.0
+                        jsonline['blocked'] = 1
                         return jsonline
         return jsonline
