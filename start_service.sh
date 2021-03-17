@@ -1,5 +1,3 @@
 #!/bin/bash
 
-conda activate yolov4-gpu 
-export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/ 
-python service_extractall.py > nsfw.log &
+/root/miniconda/bin/conda run -n yolov4-gpu /bin/bash -c "export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/ && /root/miniconda/envs/yolov4-gpu/bin/python /code/image-gpu-classifier/service_extractall.py > nsfw.log"
