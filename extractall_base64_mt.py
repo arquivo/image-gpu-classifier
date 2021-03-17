@@ -40,9 +40,9 @@ def my_service(image_path, model, metamodels, batch_size):
             if not "type" in line:
                 image_id = line["imgSrc"]
             elif line["type"] == 'image':
-                image_id = line["id"]
+                image_id = line["imgDigest"]
             else:
-                image_id = line["imgId"]
+                image_id = line["id"]
             if "imgSrcBase64" in line:
                 if (j != 0 and j % batch_size == 0):
                     processed_images, failed, duplicates = model.load_images(image_paths,True)
@@ -73,31 +73,24 @@ def parse_file(image_path, model, metamodels, batch_size):
     j = 0
     t = threading.Thread(name='my_service', target=my_service, args=(image_path, model, metamodels, batch_size))
     t.start()
-    with open(image_path + "_pages.jsonl", "w") as outP:
-        with open(image_path + "_images.jsonl", "w") as outI:
-            while True:
-                msg = batch_queue.get()
-                if msg == None:
-                    break
-                (processed_images, failed, duplicates, image_ids, stored_lines) = msg
-                count += len(processed_images)
-                j += len(stored_lines)
-                probs = model.classify(processed_images)
-                image_paths_labelled_inner, image_paths_labelled_inner_dict = model.merge_labels(probs, image_ids, failed, duplicates)
-                image_paths_labelled = image_paths_labelled_inner_dict
-                for stored_line_id in stored_lines:
-                    if stored_line_id in image_paths_labelled:
-                        for l in stored_lines[stored_line_id]:
-                            l.update(image_paths_labelled[stored_line_id])
-                for stored_line_id in stored_lines:
+    with open(image_path + "_with_nsfw.jsonl", "w") as outP:
+        while True:
+            msg = batch_queue.get()
+            if msg == None:
+                break
+            (processed_images, failed, duplicates, image_ids, stored_lines) = msg
+            count += len(processed_images)
+            j += len(stored_lines)
+            probs = model.classify(processed_images)
+            image_paths_labelled_inner, image_paths_labelled_inner_dict = model.merge_labels(probs, image_ids, failed, duplicates)
+            image_paths_labelled = image_paths_labelled_inner_dict
+            for stored_line_id in stored_lines:
+                if stored_line_id in image_paths_labelled:
                     for l in stored_lines[stored_line_id]:
-                        if not "type" in l:
-                            outP.write(json.dumps(l) + "\n")
-                        elif l["type"] == 'image':
-                            outI.write(json.dumps(l) + "\n")
-                        else:
-                            outP.write(json.dumps(l) + "\n")
-                print(count / (time.time()  - t0), j / (time.time()  - t0), batch_queue.qsize())
+                        l.update(image_paths_labelled[stored_line_id])
+            for stored_line_id in stored_lines:
+                for l in stored_lines[stored_line_id]:
+                    outP.write(json.dumps(l) + "\n")
     t.join()
 
 
@@ -131,7 +124,7 @@ def main(args=None):
     else:
         config = vars(parser.parse_args())
 
-    if config['image_source'] is None or not exists():
+    if config['image_source'] is None:
         raise ValueError("image_source must be a valid directory with images or a single image to classify.")
     
     models = [ClassifierNSFW("/mobilenet_v2_140_224")]
