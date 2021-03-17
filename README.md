@@ -63,7 +63,7 @@ docker run --net=host -e "HOST=p90.arquivo.pt" --gpus all -it -v /data/images/pi
 ## Running
 
 ```
-conda activate yolov4-gpu && export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/ && python service_extractall.py
+cd /code/image-gpu-classifier && conda activate yolov4-gpu && export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/ && python service_extractall.py
 ```
 
 ```
