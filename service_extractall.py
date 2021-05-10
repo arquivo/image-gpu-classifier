@@ -25,7 +25,7 @@ metamodels = [MetaClassifierBlocked("https://docs.google.com/spreadsheets/d/1PM4
 def on_message(ch, method, properties, body):
     print(" [x] Received %r" % body)
     hdfs_filename = body.decode("utf-8")
-    sbody = remote_filename.split("/")
+    sbody = hdfs_filename.split("/")
     COLLECTION = sbody[-3]
     TIMESTAMP = sbody[-2]
 
