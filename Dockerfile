@@ -1,9 +1,13 @@
-FROM tensorflow/tensorflow:latest-gpu-py3
+FROM tensorflow/tensorflow:2.4.1-gpu-jupyter
 
+RUN apt autoclean
+RUN apt clean
 RUN apt update -y
 
 RUN apt install unzip wget nano git openjdk-8-jre -y
-RUN pip3 install pillow
+RUN pip3 install "pillow==8.2.0"
+
+WORKDIR "/"
 
 RUN wget https://archive.apache.org/dist/hadoop/common/hadoop-3.2.1/hadoop-3.2.1.tar.gz
 RUN tar -xf hadoop-3.2.1.tar.gz
@@ -18,7 +22,7 @@ RUN mv mobilenet_v2_140_224/ mobilenet_v2_140_224.0/
 
 RUN unzip mobilenet_v2_140_224.1.zip
 
-RUN wget https://arquivo.pt/wayback/20170807060252im_/https://www.vibrolandia.com/material/12992.jpg -O test.jpg
+RUN wget https://arquivo.pt/wayback/20170807060252im_/https://www.vibrolandia.com/material/12992.jpg -O /test.jpg
 
 RUN mkdir -p /images/a
 
@@ -48,7 +52,7 @@ WORKDIR "/code/tfyolo"
 
 RUN pip install .
 
-RUN pip install colorthief pika
+RUN pip install colorthief pika "pillow==8.2.0"
 
 RUN apt install -y libsm6 libxext6 libxrender-dev
 

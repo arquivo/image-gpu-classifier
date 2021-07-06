@@ -1,6 +1,13 @@
-version: '0.1'
+version: "3.7"
 services:
-  nsfw:
-    image: redis
-volumes:
-  logvolume01: {}
+  safeimage:
+    build:
+        dockerfile: Dockerfile
+        context: .
+    image: arquivo/safeimage
+    container_name: 'safeimage'
+    volumes:
+        - /data/images/pipe:/mnt/jsons
+    environment:
+        - HOST=$HOSTNAME
+    command: sh -c '/code/image-gpu-classifier/start_service.sh'
