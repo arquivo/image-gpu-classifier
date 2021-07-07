@@ -1,98 +1,36 @@
-# Image indexing GPU tasks
+# Image Indexing GPU classifier 
 
-//:One Paragraph of project description goes here
+This project aggregates tasks to be performed at the second stage of the Image Indexing Pipeline.
+These tasks are related to the filters that are in place in Arquivo.pt (NSFW image classifier and block lists).
+Tasks in this pipeline can be either executed in the GPU (NSFW) or in the CPU (blocklist), depending on what hardware is better suited for the task.
 
 ## Getting Started
 
-//:These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+This project is designed to be part of the pipeline that starts with [Hadoop metadata extraction](https://github.com/arquivo/image-search-indexing) 
+When collections finish processing, they are automatically queued for Image Indexing GPU classifier processing. 
+Information is passed around using a RabbitMQ messaging system.
 
-### Prerequisites
-
-//:What things you need to install the software and how to install them
-
-```
-//:Give examples
-```
-
-### Installing
-
-//:A step by step series of examples that tell you how to get a development env running
-
-//:Say what the step will be
+Clone the repo and run:
 
 ```
-//:Give the example
-```
-
-//:And repeat
-
-```
-//:until finished
-```
-
-//:End with an example of getting some data out of the system or using it for a little demo
-
-//:## Running the tests
-
-//:Explain how to run the automated tests for this system
-
-//:### Break down into end to end tests
-
-//:Explain what these tests test and why
-
-```
-Give an example
-```
-
-//:### And coding style tests
-
-//:Explain what these tests test and why
-
-//:```
-//:Give an example
-//:```
-
-## Deployment
-
-//:Add additional notes about how to deploy this on a live system
-
-```
-docker run --net=host -e "HOST=p90.arquivo.pt" --gpus all -it -v /data/images/pipe:/mnt/jsons <id>
-```
-
-## Running
-
-```
-cd /code/image-gpu-classifier && conda activate yolov4-gpu && export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/ && python service_extractall.py
-```
-
-```
-conda activate yolov4-gpu
-python detect_headless.py --weights ./checkpoints/yolov4-416 --size 416 --model yolov4 --images ../test.jpg
+docker-compose up
 ```
 
 
-```
-python detect_headless.py --weights ./checkpoints/yolov4-416 --size 416 --model yolov4 --images ../test.jpg
-```
+### Overview
 
-//:## Built With
+This package contains four types of classifier:
+- NSFW classification (based on https://github.com/GantMan/nsfw_model) 
+- Arquivo.pt Blocklist
+- Yolo v4 extractor (based on https://github.com/amourao/tensorflow-yolov4-tflite)
+- Dominant color extractor
 
-//:* [Dropwizard](http://www.dropwizard.io/1.0.2/docs/) - The web framework used
-//:* [Maven](https://maven.apache.org/) - Dependency Management
-//:* [ROME](https://rometools.github.io/rome/) - Used to generate RSS Feeds
+For computational efficiency reasons, only the first two are being used.
 
-//:## Contributing
+New classifiers can be added by extending `classifier_base.py`.
+Check the other `classifier_*.py` classes for examples on how to do this.
 
-//:Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c63ec426) for details on our code of conduct, and the process for submitting pull requests to us.
+The entry point for the pipeline is `service_extractall.py`.
+It is started automatically when runining Docker by `start_service.sh`.
 
-## Authors
-
-* **André Mourão** - *Initial work* - [amourao](https://github.com/amourao)
-
-//:See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
-
-## License
-
-//:This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
-
+The class that takes care of processing images is `extractall_base64_mt.py`.

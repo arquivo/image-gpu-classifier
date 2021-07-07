@@ -10,17 +10,20 @@ import base64
 import numpy as np
  
 class ClassifierBase(ABC):
+    """Abstract class that defines a classifier to be used by the pipeline"""
  
     def __init__(self):
         super().__init__()
         self.do_process_image = False
 
     def merge_labels_single(self, labels, probs): 
+        """Update nsfw score if higher (used for animated GIFS)"""
         if not ("nsfw" in labels and "nsfw" in probs and probs["nsfw"] < labels["nsfw"]):
             labels.update(probs)
         return labels
 
     def merge_labels(self, probs, image_paths, failed, duplicates):
+        """Deal with labels from images that failed processing or from duplicates found"""
         labels = []
         labelsDict = {}
         i = 0
@@ -42,6 +45,7 @@ class ClassifierBase(ABC):
 
 
     def process_image(self, image, do_process_image=False):
+        """Default image processing to TensorFlow"""
         if not do_process_image:
             return image
         image = image.resize(self.get_image_size(), resample=Image.BILINEAR).convert('RGB')
@@ -50,11 +54,13 @@ class ClassifierBase(ABC):
         return np.asarray(image)
 
     def process_images(self, images, do_process_image=False):
+        """Default image processing to TensorFlow for multiple images"""
         if not do_process_image:
             return images
         return np.asarray([self.process_image(image, do_process_image) for image in images])
 
     def load_images(self, image_paths, do_process_image=False):
+        """Load images data into a PIL image from base64 or image path"""
         images = []
         failed = []
         same_images = {}
@@ -94,9 +100,11 @@ class ClassifierBase(ABC):
         self.image_size = image_size
 
     def classify(self, image_datas):
+        """ "Abstract" classifier method"""
         return {}
 
     def do_process_images(self):
+        """Whether this classifier needs pre-processing or not"""
         return self.do_process_image
 
 

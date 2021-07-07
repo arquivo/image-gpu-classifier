@@ -25,8 +25,10 @@ FLAGS['iou'] = 0.45
 FLAGS['score'] = 0.25
 
 class ClassifierTags(ClassifierBase):
+"""Extract image tags using the Yolo V4 model """
  
     def __init__(self, model_path='/code/tfyolo/checkpoints/yolov4-416'):
+        """Prepare args and load model"""
         super().__init__()
         self.config = ConfigProto()
         self.config.gpu_options.allow_growth = True
@@ -39,6 +41,7 @@ class ClassifierTags(ClassifierBase):
 
 
     def classify(self, image_datas):
+        """Check if this record matches Arquivo's block list"""
         if image_datas == []:
             return []
         output = []
@@ -46,6 +49,7 @@ class ClassifierTags(ClassifierBase):
         pred_bbox = self.infer(batch_data)
         value = pred_bbox["tf_op_layer_concat_18"]      
         for i in range(value.shape[0]):
+        # this is inspired by the Yolo v4 example
             boxes = value[i:i+1, :, 0:4]
             pred_conf = value[i:i+1, :, 4:]
             boxes, scores, classes, valid_detections = tf.image.combined_non_max_suppression(
