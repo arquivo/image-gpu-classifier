@@ -12,7 +12,7 @@ class ClassifierNSFW(ClassifierBase):
       - 'hentai'
       - 'neutral'
       - 'porn'
-      - 'sexy' 
+      - 'sexy'
     """
 
     def __init__(self, model_path='mobilenet_v2_140_224'):

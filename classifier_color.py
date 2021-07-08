@@ -3,7 +3,7 @@ from classifier_base import ClassifierBase
 from colorthief import MMCQ
 
 class ClassifierColor(ClassifierBase):
-    """Extract dominant color from image in HEX """
+    """Extract dominant color from image in HEX"""
 
     def __init__(self):
         super().__init__()

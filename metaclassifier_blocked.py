@@ -5,7 +5,7 @@ import json
 import sys
 
 class MetaClassifierBlocked():
-"""Check if this record matches Arquivo's block list"""
+    """Check if this record matches Arquivo's block list"""
 
     def __init__(self, block_list):
         download = requests.get(block_list)
