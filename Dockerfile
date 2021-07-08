@@ -4,12 +4,12 @@ RUN apt autoclean
 RUN apt clean
 RUN apt update -y
 
-RUN apt install unzip wget nano git openjdk-8-jre -y
+RUN apt install unzip wget nano git openjdk-8-jre-headless -y
 RUN pip3 install "pillow==8.2.0"
 
 WORKDIR "/"
 
-RUN wget https://archive.apache.org/dist/hadoop/common/hadoop-3.2.1/hadoop-3.2.1.tar.gz
+RUN wget https://arquivo.pt/gpu_models/hadoop-3.2.1.tar.gz
 RUN tar -xf hadoop-3.2.1.tar.gz
 RUN export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/
 

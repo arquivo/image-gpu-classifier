@@ -13,6 +13,7 @@ Information is passed around using a RabbitMQ messaging system.
 Clone the repo and run:
 
 ```
+docker build .
 docker-compose up
 ```
 

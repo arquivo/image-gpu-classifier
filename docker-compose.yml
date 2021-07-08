@@ -1,9 +1,6 @@
 version: "3.7"
 services:
   safeimage:
-    build:
-        dockerfile: Dockerfile
-        context: .
     image: arquivo/safeimage
     container_name: 'safeimage'
     volumes:
