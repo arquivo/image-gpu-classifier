@@ -25,8 +25,8 @@ FLAGS['iou'] = 0.45
 FLAGS['score'] = 0.25
 
 class ClassifierTags(ClassifierBase):
-"""Extract image tags using the Yolo V4 model """
- 
+    """Extract image tags using the Yolo V4 model """
+    
     def __init__(self, model_path='/code/tfyolo/checkpoints/yolov4-416'):
         """Prepare args and load model"""
         super().__init__()
