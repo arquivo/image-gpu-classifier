@@ -8,3 +8,10 @@ services:
     environment:
         - HOST=$HOSTNAME
     command: sh -c '/code/image-gpu-classifier/start_service.sh'
+    deploy:
+       resources:
+         reservations:
+           devices:
+             - capabilities:
+               - gpu
+             
