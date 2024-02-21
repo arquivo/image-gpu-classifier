@@ -20,8 +20,8 @@ HOST = os.environ['HOST']
 
 # HDFS commands to copy data from HDFS and remove it when we are done processing it
 # They are currently "fixed" to a set Hadoop master (p43) and specific Hadoop version (3.2.1)
-HDFS_CP_COMMAND="/hadoop-3.2.1/bin/hdfs dfs -fs hdfs://p43.arquivo.pt:9000 -copyToLocal -f {} {}/{}"
-HDFS_RM_COMMAND="/hadoop-3.2.1/bin/hdfs dfs -fs hdfs://p43.arquivo.pt:9000 -rm -f {}"
+HDFS_CP_COMMAND="/hadoop-3.3.6/bin/hdfs dfs -fs hdfs://p43.arquivo.pt:9000 -copyToLocal -f {} {}/{}"
+HDFS_RM_COMMAND="/hadoop-3.3.6/bin/hdfs dfs -fs hdfs://p43.arquivo.pt:9000 -rm -f {}"
 
 LOCAL_DOCKER_PATH="/mnt/jsons"
 HOST_PATH="/data/images/pipe"

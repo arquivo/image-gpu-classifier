@@ -1,5 +1,7 @@
 FROM tensorflow/tensorflow:2.4.1-gpu-jupyter
 
+RUN apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/3bf863cc.pub
+
 RUN apt autoclean
 RUN apt clean
 RUN apt update -y
@@ -9,8 +11,8 @@ RUN pip3 install "pillow==8.2.0"
 
 WORKDIR "/"
 
-RUN wget https://arquivo.pt/gpu_models/hadoop-3.2.1.tar.gz
-RUN tar -xf hadoop-3.2.1.tar.gz
+RUN wget https://dist.apache.org/repos/dist/release/hadoop/common/hadoop-3.3.6/hadoop-3.3.6.tar.gz
+RUN tar -xf hadoop-3.3.6.tar.gz
 RUN export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/
 
 RUN wget https://arquivo.pt/gpu_models/nsfw_mobilenet_v2_140_224.zip
