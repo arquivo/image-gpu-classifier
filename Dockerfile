@@ -33,7 +33,7 @@ RUN mv /test.jpg /images/a
 RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh
 RUN bash ~/miniconda.sh -b -p $HOME/miniconda
 
-RUN git clone https://github.com/amourao/tensorflow-yolov4-tflite
+RUN git clone https://github.com/arquivo/tensorflow-yolov4-tflite
 
 RUN mkdir /code
 
